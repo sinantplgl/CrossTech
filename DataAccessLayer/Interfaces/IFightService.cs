@@ -9,6 +9,6 @@ namespace DataAccessLayer.Interfaces
     {
         IEnumerable<Fight> GetAllFights();
         Fight GetFightById(Guid id);
-        Fight CreateFight();
+        Fight CreateFight(Fight fight);
     }
 }

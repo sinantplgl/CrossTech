@@ -17,6 +17,8 @@ namespace DataAccessLayer
 
         public virtual DbSet<Ability> Abilities { get; set; }
         public virtual DbSet<Player> Players { get; set; }
+        public virtual DbSet<Fight> Fights { get; set; }
+        public virtual DbSet<FightLog> FightLogs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -50,6 +52,28 @@ namespace DataAccessLayer
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(50);
+            });
+
+            modelBuilder.Entity<Fight>(entity =>
+            {
+                entity.Property(e => e.Id).HasDefaultValueSql("(newsequentialid())");
+
+                entity.HasOne(d => d.Player)
+                    .WithMany(p => p.Fights)
+                    .HasForeignKey(d => d.PlayerId);
+
+                entity.HasOne(d => d.Bot)
+                    .WithMany(p => p.Fights)
+                    .HasForeignKey(d => d.BotId);
+            });
+
+            modelBuilder.Entity<FightLog>(entity =>
+            {
+                entity.Property(e => e.Id).HasDefaultValueSql("(newsequentialid())");
+
+                entity.HasOne(d => d.Fight)
+                .WithMany(p => p.FightLogs)
+                .HasForeignKey(d => d.FightId);
             });
         }
     }

@@ -10,7 +10,7 @@ namespace DataAccessLayer.Interfaces
         IEnumerable<Ability> GetAllAbilities();
         Ability GetAbility(Guid id);
         Ability CreateAbility(Ability ability);
-        Ability UpdateAbility(Ability ability);
+        void UpdateAbility(Ability ability);
         void DeleteAbility(Ability ability);
     }
 }

@@ -36,6 +36,10 @@ namespace FighterAPI
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             
             services.AddScoped<IPlayerService, PlayerService>();
+            services.AddScoped<IAbilityService, AbilityService>();
+            services.AddScoped<IFightService, FightService>();
+            services.AddScoped<IFightLogService, FightLogService>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
