@@ -8,11 +8,9 @@ namespace DataAccessLayer.Interfaces
     public interface IPlayerService
     {
         IEnumerable<Player> GetAllPlayers();
-        Player GetPlayerById(Guid Id);
-        Player CreatePlayer();
+        Player GetPlayer(Guid id);
+        Player CreatePlayer(Player player);
         void UpdatePlayer(Player player);
         void DeletePlayer(Guid id);
-
-
     }
 }

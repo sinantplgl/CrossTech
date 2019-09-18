@@ -17,7 +17,7 @@ namespace ServiceLayer
             _context = context;
         }
 
-        public Player CreatePlayer()
+        public Player CreatePlayer(Player player)
         {
             throw new NotImplementedException();
         }
@@ -32,7 +32,7 @@ namespace ServiceLayer
             return _context.Players.Include(p => p.Abilities).ToList();
         }
 
-        public Player GetPlayerById(Guid Id)
+        public Player GetPlayer(Guid id)
         {
             throw new NotImplementedException();
         }
