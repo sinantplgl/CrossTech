@@ -11,6 +11,6 @@ namespace DataAccessLayer.Interfaces
         Ability GetAbility(Guid id);
         Ability CreateAbility(Ability ability);
         Ability UpdateAbility(Ability ability);
-        void DeleteAbility(Guid id);
+        void DeleteAbility(Ability ability);
     }
 }

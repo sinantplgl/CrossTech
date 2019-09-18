@@ -45,27 +45,73 @@ namespace FighterAPI.Controllers
 
         // GET api/players/{id}
         [HttpGet("{id}")]
-        public string Get(int id)
+        public Player Get(Guid id)
         {
-            return "value";
+            var result = _playerService.GetPlayer(id);
+            return new Player {
+                Id = result.Id,
+                Name = result.Name,
+                HitPoint = result.HitPoint,
+                ArmorClass = result.ArmorClass,
+                Damage = result.Damage,
+                Abilities = result.Abilities.Select(a => new Ability
+                {
+                    Id = a.Id,
+                    Name = a.Name,
+                    Damage = a.Damage
+                })
+            };
         }
 
         // POST api/players
         [HttpPost]
-        public void Post([FromBody]string value)
+        public ActionResult<Player> Post([FromBody]Player player)
         {
+            var result = _playerService.CreatePlayer(
+                new DataAccessLayer.Models.Player
+                {
+                    Name = player.Name,
+                    HitPoint = player.HitPoint,
+                    ArmorClass = player.ArmorClass,
+                    Damage = player.Damage
+                });
+            player.Id = result.Id;
+
+            return Ok(player);
         }
 
         // PUT api/players/{id}
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public ActionResult<Player> Put(Guid id, [FromBody]Player player)
         {
+            var result = _playerService.GetPlayer(id);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                result.Name = player.Name;
+                result.HitPoint = player.HitPoint;
+                result.ArmorClass = player.ArmorClass;
+                result.Damage = player.Damage;
+                _playerService.UpdatePlayer(result);
+            }
+            player.Id = result.Id;
+            return Ok(player);
         }
 
         // DELETE api/players/{id}
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public ActionResult Delete(Guid id)
         {
+            var result = _playerService.GetPlayer(id);
+            if(result == null)
+                return NotFound();
+            else
+                _playerService.DeletePlayer(result);
+
+            return Ok();
         }
     }
 }

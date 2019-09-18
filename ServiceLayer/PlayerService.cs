@@ -19,12 +19,16 @@ namespace ServiceLayer
 
         public Player CreatePlayer(Player player)
         {
-            throw new NotImplementedException();
+            _context.Players.Add(player);
+            _context.SaveChanges();
+
+            return player;
         }
 
-        public void DeletePlayer(Guid id)
+        public void DeletePlayer(Player player)
         {
-            throw new NotImplementedException();
+            _context.Remove(player);
+            _context.SaveChanges();
         }
 
         public IEnumerable<Player> GetAllPlayers()
@@ -34,12 +38,14 @@ namespace ServiceLayer
 
         public Player GetPlayer(Guid id)
         {
-            throw new NotImplementedException();
+            return _context.Players.Find(id);
+   
         }
 
         public void UpdatePlayer(Player player)
         {
-            throw new NotImplementedException();
+            _context.Entry(player).State = EntityState.Modified;
+            _context.SaveChanges();
         }
     }
 }

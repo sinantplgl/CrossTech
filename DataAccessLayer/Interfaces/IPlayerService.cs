@@ -11,6 +11,6 @@ namespace DataAccessLayer.Interfaces
         Player GetPlayer(Guid id);
         Player CreatePlayer(Player player);
         void UpdatePlayer(Player player);
-        void DeletePlayer(Guid id);
+        void DeletePlayer(Player player);
     }
 }
