@@ -38,7 +38,9 @@ namespace ServiceLayer
 
         public Player GetPlayer(Guid id)
         {
-            return _context.Players.Find(id);
+            return _context.Players
+                .Include(p => p.Abilities)
+                .SingleOrDefault(p => p.Id == id);
    
         }
 

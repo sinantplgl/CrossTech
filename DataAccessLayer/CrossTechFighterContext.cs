@@ -61,10 +61,6 @@ namespace DataAccessLayer
                 entity.HasOne(d => d.Player)
                     .WithMany(p => p.Fights)
                     .HasForeignKey(d => d.PlayerId);
-
-                entity.HasOne(d => d.Bot)
-                    .WithMany(p => p.Fights)
-                    .HasForeignKey(d => d.BotId);
             });
 
             modelBuilder.Entity<FightLog>(entity =>

@@ -27,7 +27,9 @@ namespace ServiceLayer
 
         public IEnumerable<Fight> GetAllFights()
         {
-            return _context.Fights.ToList();
+            return _context.Fights
+                .Include(f => f.FightLogs)
+                .ToList();
         }
 
         public Fight GetFightById(Guid id)

@@ -33,7 +33,11 @@ namespace FighterAPI
             var connection = @"Server=(localdb)\mssqllocaldb;Database=CrossTechFighter;Trusted_Connection=True;ConnectRetryCount=0";
             services.AddDbContext<CrossTechFighterContext>(options => options.UseSqlServer(connection));
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+                .AddJsonOptions(options => {
+                    options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+                });
             
             services.AddScoped<IPlayerService, PlayerService>();
             services.AddScoped<IAbilityService, AbilityService>();
