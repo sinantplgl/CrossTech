@@ -210,8 +210,15 @@ namespace FighterAPI.Controllers
             
             //Player uses an ability
             var ability = _abilityService.GetAbility(abilityId);
+            if (ability == null)
+                return NotFound();
+
+            //Check if the ability belongs to player
+           else if (ability.PlayerId != player.Id)
+                return RegularAttack(id);
+
             //Check if the fight didn't end yet
-            if(lastLog.PlayerHitPoint != 0 && lastLog.BotHitPoint != 0)
+            else if(lastLog.PlayerHitPoint != 0 && lastLog.BotHitPoint != 0)
             {
                 //Roll for an attack
                 if(RollAttack(bot.ArmorClass)) //If hits
