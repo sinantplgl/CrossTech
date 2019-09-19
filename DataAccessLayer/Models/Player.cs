@@ -25,7 +25,9 @@ namespace DataAccessLayer.Models
         public int Damage { get; set; }
 
         public virtual IEnumerable<Ability> Abilities { get; set; }
-        public virtual IEnumerable<Fight> Fights { get; set; }
+        public virtual IEnumerable<Fight> FightsBot { get; set; }
+        public virtual IEnumerable<Fight> FightsPlayer { get; set; }
+
     }
 
     [Table("Abilities")]

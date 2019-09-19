@@ -16,7 +16,7 @@ namespace FighterAPI.Controllers
         private IPlayerService _playerService;
         private IFightLogService _fightLogService;
         private IAbilityService _abilityService;
-
+        private static Random rnd;
         public FightsController(
             IFightService fightService, 
             IPlayerService playerService, 
@@ -27,6 +27,8 @@ namespace FighterAPI.Controllers
             _playerService = playerService;
             _fightLogService = fightLogService;
             _abilityService = abilityService;
+
+            rnd = new Random();
         }
 
         [HttpGet]
@@ -75,7 +77,7 @@ namespace FighterAPI.Controllers
         public ActionResult<Fight> StartFight(Guid id)
         {
             //Create Bot with default vaules for new fight
-            var botId = Guid.Parse("4cb89d9f-3fd9-e911-a5ff-80fa5b0fc197");
+            var botId = Guid.Parse("b5774a2a-95da-e911-a603-80fa5b0fc197");
             var bot = _playerService.GetPlayer(botId);
             
             //Get player
@@ -223,7 +225,7 @@ namespace FighterAPI.Controllers
                                 PlayerHitPoint = lastLog.PlayerHitPoint,
                                 BotHitPoint = lastLog.BotHitPoint - ability.Damage,
                                 Turn = lastLog.Turn + 1,
-                                LogEntry = String.Format("Player {0}: Used an ability ({1}). Dealt {2} damage to the Bot {3}.", player.Id, ability.Name, ability.Damage, bot.Id)
+                                LogEntry = String.Format("Player {0}: Used an ability({1}). Dealt {2} damage to the Bot {3}.", player.Id, ability.Name, ability.Damage, bot.Id)
                             });
                         //Bot makes an attack
                         BotAttack(fight, player, bot, lastLog);
@@ -237,7 +239,7 @@ namespace FighterAPI.Controllers
                                 PlayerHitPoint = lastLog.PlayerHitPoint,
                                 BotHitPoint = 0,
                                 Turn = lastLog.Turn + 1,
-                                LogEntry = String.Format("Player {0}: Used an ability ({1}). Dealt {2} damage to the Bot {3}. Player won!", player.Id, ability.Name, lastLog.BotHitPoint, bot.Id)
+                                LogEntry = String.Format("Player {0}: Used an ability({1}). Dealt {2} damage to the Bot {3}. Player won!", player.Id, ability.Name, lastLog.BotHitPoint, bot.Id)
                             });
                     }
                 }
@@ -250,7 +252,7 @@ namespace FighterAPI.Controllers
                             PlayerHitPoint = lastLog.PlayerHitPoint,
                             BotHitPoint = lastLog.BotHitPoint,
                             Turn = lastLog.Turn + 1,
-                            LogEntry = String.Format("Player {0}: Couldn't exceed the armor class.", player.Id)
+                            LogEntry = String.Format("Player {0}: Used an ability({1}). Couldn't exceed the armor class.", player.Id, ability.Name)
                         });
                     //Bot makes an attack
                     BotAttack(fight, player, bot, lastLog);
@@ -280,19 +282,18 @@ namespace FighterAPI.Controllers
             DataAccessLayer.Models.Fight fight, DataAccessLayer.Models.Player player,
             DataAccessLayer.Models.Player bot, DataAccessLayer.Models.FightLog lastLog)
         {
+            string abilityText = "";
+            int damage = bot.Damage;
+            if (bot.Abilities.Count() > 0 && rnd.Next(100) < 20) //It has 20% chance by default to use its speacial attack
+            {
+                var ability = bot.Abilities.ElementAt(rnd.Next(bot.Abilities.Count()));
+                damage = ability.Damage;
+                abilityText = String.Format("Used an ability({0}). ", ability.Name);
+            }
             //Bot rolls for an attack
             if(RollAttack(player.ArmorClass))
             {
                 int currentHP = lastLog.PlayerHitPoint;
-                Random rnd = new Random();
-                string abilityText = "";
-                int damage = bot.Damage;
-                if (bot.Abilities.Count() > 0 && rnd.Next(100) < 20) //It has 20% chance by default to use its speacial attack
-                {
-                    var ability = bot.Abilities.ElementAt(rnd.Next(bot.Abilities.Count()));
-                    damage = ability.Damage;
-                    abilityText = String.Format("Used an ability({0}). ", ability.Name);
-                }
 
                 if (currentHP > damage) //If its not the final blow
                     lastLog = _fightLogService.CreateFightLog(
@@ -325,16 +326,15 @@ namespace FighterAPI.Controllers
                         PlayerHitPoint = lastLog.PlayerHitPoint,
                         BotHitPoint = lastLog.BotHitPoint,
                         Turn = lastLog.Turn + 1,
-                        LogEntry = String.Format("Bot {0}: Couldn't exceed the armor class.", bot.Id)
+                        LogEntry = String.Format("Bot {0}: {1}Couldn't exceed the armor class.", bot.Id, abilityText)
                     });
             }
         }
 
         private bool RollAttack(int ArmorClass)
         {
-            Random rnd = new Random();
-
-            return rnd.Next(1, 21) >= ArmorClass;
+            var i = rnd.Next(1000) % 20;
+            return (i == 0 ? i + 20 : i + 1) >= ArmorClass;
         }
 
     }

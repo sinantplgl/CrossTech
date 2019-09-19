@@ -60,7 +60,8 @@ namespace FighterAPI.Controllers
             return Ok(ability);
         }
 
-        [HttpPut] ActionResult<Ability> Put(Guid id, [FromBody] Ability ability)
+        [HttpPut("{id}")]
+        public ActionResult<Ability> Put(Guid id, [FromBody] Ability ability)
         {
             var result = _abilityService.GetAbility(id);
             if (result == null)
@@ -70,6 +71,7 @@ namespace FighterAPI.Controllers
                 result.PlayerId = ability.PlayerId;
                 result.Name = ability.Name;
                 result.Damage = ability.Damage;
+                _abilityService.UpdateAbility(result);
             }
             ability.Id = result.Id;
             return Ok(ability);
