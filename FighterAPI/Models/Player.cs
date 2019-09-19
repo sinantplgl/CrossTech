@@ -20,7 +20,7 @@ namespace FighterAPI.Models
     public class Ability
     {
         public Guid Id { get; set; }
-        public Guid PlayerId { get; set; }
+        public Guid? PlayerId { get; set; }
         public string Name { get; set; }
         public int Damage { get; set; }
     }

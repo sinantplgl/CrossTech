@@ -15,15 +15,18 @@ namespace FighterAPI.Controllers
         private IFightService _fightService;
         private IPlayerService _playerService;
         private IFightLogService _fightLogService;
+        private IAbilityService _abilityService;
 
         public FightsController(
             IFightService fightService, 
             IPlayerService playerService, 
-            IFightLogService fightLogService)
+            IFightLogService fightLogService,
+            IAbilityService abilityService)
         {
             _fightService = fightService;
             _playerService = playerService;
             _fightLogService = fightLogService;
+            _abilityService = abilityService;
         }
 
         [HttpGet]
@@ -108,9 +111,9 @@ namespace FighterAPI.Controllers
                     .Select(l => new FightLog
                     {
                         Id = l.Id,
+                        Turn = l.Turn,
                         PlayerHitPoint = l.PlayerHitPoint,
                         BotHitPoint = l.BotHitPoint,
-                        Turn = l.Turn,
                         LogEntry = l.LogEntry
                     })
             });
@@ -124,54 +127,57 @@ namespace FighterAPI.Controllers
             var player = _playerService.GetPlayer(fight.PlayerId);
             var bot = _playerService.GetPlayer(fight.BotId);
             var lastLog = _fightLogService.GetLogsByFightId(fight.Id).LastOrDefault();
-
-            //Players makes a regular attack
-            if (RollAttack(bot.ArmorClass)) //Attack hits
+            
+            //Check if the fight didn't end yet
+            if (lastLog.PlayerHitPoint != 0 && lastLog.BotHitPoint != 0)
             {
-                int currentHP = lastLog.BotHitPoint;
-                if(currentHP > player.Damage) //If its not the final blow
+                //Players makes a regular attack
+                if (RollAttack(bot.ArmorClass)) //Attack hits
                 {
-                   lastLog = _fightLogService.CreateFightLog(
-                        new DataAccessLayer.Models.FightLog
-                        {
-                            FightId = fight.Id,
-                            PlayerHitPoint = lastLog.PlayerHitPoint,
-                            BotHitPoint = lastLog.BotHitPoint - player.Damage,
-                            Turn = lastLog.Turn + 1,
-                            LogEntry = String.Format("Player {0}: Dealt {1} damage to the Bot {2}.", player.Id, player.Damage, bot.Id)
-                        });
-                    //Bot makes an attack
-                    BotAttack(fight, player, bot, lastLog);
+                    int currentHP = lastLog.BotHitPoint;
+                    if (currentHP > player.Damage) //If its not the final blow
+                    {
+                        lastLog = _fightLogService.CreateFightLog(
+                             new DataAccessLayer.Models.FightLog
+                             {
+                                 FightId = fight.Id,
+                                 PlayerHitPoint = lastLog.PlayerHitPoint,
+                                 BotHitPoint = lastLog.BotHitPoint - player.Damage,
+                                 Turn = lastLog.Turn + 1,
+                                 LogEntry = String.Format("Player {0}: Dealt {1} damage to the Bot {2}.", player.Id, player.Damage, bot.Id)
+                             });
+                        //Bot makes an attack
+                        BotAttack(fight, player, bot, lastLog);
+                    }
+                    else
+                    {
+
+                        lastLog = _fightLogService.CreateFightLog(
+                            new DataAccessLayer.Models.FightLog
+                            {
+                                FightId = fight.Id,
+                                PlayerHitPoint = lastLog.PlayerHitPoint,
+                                BotHitPoint = 0,
+                                Turn = lastLog.Turn + 1,
+                                LogEntry = String.Format("Player {0}: Dealt {1} damage to the Bot {2}. Player won!", player.Id, lastLog.BotHitPoint, bot.Id)
+                            });
+                    }
                 }
                 else
                 {
-
                     lastLog = _fightLogService.CreateFightLog(
                         new DataAccessLayer.Models.FightLog
                         {
                             FightId = fight.Id,
                             PlayerHitPoint = lastLog.PlayerHitPoint,
-                            BotHitPoint = 0,
+                            BotHitPoint = lastLog.BotHitPoint,
                             Turn = lastLog.Turn + 1,
-                            LogEntry = String.Format("Player {0}: Dealt {1} damage to the Bot {2}. Player won!", player.Id, lastLog.BotHitPoint, bot.Id)
+                            LogEntry = String.Format("Player {0}: Couldn't exceed the armor class.", player.Id)
                         });
+                    //Bot makes an attack
+                    BotAttack(fight, player, bot, lastLog);
                 }
             }
-            else
-            {
-                lastLog =_fightLogService.CreateFightLog(
-                    new DataAccessLayer.Models.FightLog
-                    {
-                        FightId = fight.Id,
-                        PlayerHitPoint = lastLog.PlayerHitPoint,
-                        BotHitPoint = lastLog.BotHitPoint,
-                        Turn = lastLog.Turn + 1,
-                        LogEntry = String.Format("Player {0}: Couldn't exceed the armor class.", player.Id)
-                    });
-                //Bot makes an attack
-                BotAttack(fight, player, bot, lastLog);
-            }
-
             return Ok(new Fight
             {
                 Id = fight.Id,
@@ -183,9 +189,9 @@ namespace FighterAPI.Controllers
                     .Select(l => new FightLog
                     {
                         Id = l.Id,
+                        Turn = l.Turn,
                         PlayerHitPoint = l.PlayerHitPoint,
                         BotHitPoint = l.BotHitPoint,
-                        Turn = l.Turn,
                         LogEntry = l.LogEntry
                     }).OrderByDescending(log => log.Turn)
             });
@@ -199,11 +205,75 @@ namespace FighterAPI.Controllers
             var player = _playerService.GetPlayer(fight.PlayerId);
             var bot = _playerService.GetPlayer(fight.BotId);
             var lastLog = _fightLogService.GetLogsByFightId(fight.Id).LastOrDefault();
+            
             //Player uses an ability
+            var ability = _abilityService.GetAbility(abilityId);
+            //Check if the fight didn't end yet
+            if(lastLog.PlayerHitPoint != 0 && lastLog.BotHitPoint != 0)
+            {
+                //Roll for an attack
+                if(RollAttack(bot.ArmorClass)) //If hits
+                {
+                    if(lastLog.BotHitPoint > ability.Damage) //If its not final blow
+                    {
+                        lastLog = _fightLogService.CreateFightLog(
+                            new DataAccessLayer.Models.FightLog
+                            {
+                                FightId = fight.Id,
+                                PlayerHitPoint = lastLog.PlayerHitPoint,
+                                BotHitPoint = lastLog.BotHitPoint - ability.Damage,
+                                Turn = lastLog.Turn + 1,
+                                LogEntry = String.Format("Player {0}: Used an ability ({1}). Dealt {2} damage to the Bot {3}.", player.Id, ability.Name, ability.Damage, bot.Id)
+                            });
+                        //Bot makes an attack
+                        BotAttack(fight, player, bot, lastLog);
+                    }
+                    else
+                    {
+                        lastLog = _fightLogService.CreateFightLog(
+                            new DataAccessLayer.Models.FightLog
+                            {
+                                FightId = fight.Id,
+                                PlayerHitPoint = lastLog.PlayerHitPoint,
+                                BotHitPoint = 0,
+                                Turn = lastLog.Turn + 1,
+                                LogEntry = String.Format("Player {0}: Used an ability ({1}). Dealt {2} damage to the Bot {3}. Player won!", player.Id, ability.Name, lastLog.BotHitPoint, bot.Id)
+                            });
+                    }
+                }
+                else
+                {
+                    lastLog = _fightLogService.CreateFightLog(
+                        new DataAccessLayer.Models.FightLog
+                        {
+                            FightId = fight.Id,
+                            PlayerHitPoint = lastLog.PlayerHitPoint,
+                            BotHitPoint = lastLog.BotHitPoint,
+                            Turn = lastLog.Turn + 1,
+                            LogEntry = String.Format("Player {0}: Couldn't exceed the armor class.", player.Id)
+                        });
+                    //Bot makes an attack
+                    BotAttack(fight, player, bot, lastLog);
+                }
+            }
 
-            //Bot makes an attack
-            BotAttack(fight, player, bot, lastLog);
-            return Ok();
+            return Ok(new Fight
+            {
+                Id = fight.Id,
+                PlayerId = fight.PlayerId,
+                BotId = fight.BotId,
+                FightLogs = _fightLogService
+                    .GetLogsByFightId(fight.Id)
+                    .ToList()
+                    .Select(l => new FightLog
+                    {
+                        Id = l.Id,
+                        Turn = l.Turn,
+                        PlayerHitPoint = l.PlayerHitPoint,
+                        BotHitPoint = l.BotHitPoint,
+                        LogEntry = l.LogEntry
+                    }).OrderByDescending(log => log.Turn)
+            });
         }
 
         private void BotAttack(
@@ -214,16 +284,25 @@ namespace FighterAPI.Controllers
             if(RollAttack(player.ArmorClass))
             {
                 int currentHP = lastLog.PlayerHitPoint;
-                //TODO: Bot can make a special attack
-                if (currentHP > bot.Damage) //If its not the final blow
+                Random rnd = new Random();
+                string abilityText = "";
+                int damage = bot.Damage;
+                if (bot.Abilities.Count() > 0 && rnd.Next(100) < 20) //It has 20% chance by default to use its speacial attack
+                {
+                    var ability = bot.Abilities.ElementAt(rnd.Next(bot.Abilities.Count()));
+                    damage = ability.Damage;
+                    abilityText = String.Format("Used an ability({0}). ", ability.Name);
+                }
+
+                if (currentHP > damage) //If its not the final blow
                     lastLog = _fightLogService.CreateFightLog(
                          new DataAccessLayer.Models.FightLog
                          {
                              FightId = fight.Id,
-                             PlayerHitPoint = lastLog.PlayerHitPoint - bot.Damage,
+                             PlayerHitPoint = lastLog.PlayerHitPoint - damage,
                              BotHitPoint = lastLog.BotHitPoint,
                              Turn = lastLog.Turn + 1,
-                             LogEntry = String.Format("Bot {0}: Dealt {1} damage to the Player {2}.", bot.Id, bot.Damage, player.Id)
+                             LogEntry = String.Format("Bot {0}: {3}Dealt {1} damage to the Player {2}.", bot.Id, damage, player.Id, abilityText)
                          });
                 else
                     lastLog = _fightLogService.CreateFightLog(
@@ -233,7 +312,7 @@ namespace FighterAPI.Controllers
                             PlayerHitPoint = 0,
                             BotHitPoint = lastLog.BotHitPoint,
                             Turn = lastLog.Turn + 1,
-                            LogEntry = String.Format("Bot {0}: Dealt {1} damage to the Player {2}. Bot won!", bot.Id, lastLog.PlayerHitPoint, player.Id)
+                            LogEntry = String.Format("Bot {0}: {3}Dealt {1} damage to the Player {2}. Bot won!", bot.Id, lastLog.PlayerHitPoint, player.Id, abilityText)
                         });
 
             }

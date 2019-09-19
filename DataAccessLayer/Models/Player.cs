@@ -32,7 +32,7 @@ namespace DataAccessLayer.Models
     public class Ability
     {
         public Guid Id { get; set; }
-        public Guid PlayerId { get; set; }
+        public Guid? PlayerId { get; set; }
         [Required]
         public string Name { get; set; }
         [Required]
