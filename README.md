@@ -24,7 +24,7 @@ In this application I decided to follow the simplified [Dungeons & Dragons](http
   
 ### API
 
-For the player and abilities, all CRUD functions have been implemented. You cannot update or delete fight logs. A default monster with *Id: b5774a2a-95da-e911-a603-80fa5b0fc197*, will be created after running provided SQL script, you don't need add a new monster. It will be used for each combat by default (Didn't use environment variable or anything else for this, Id can be changed to another existing DB Player entry from the FightsController.cs).
+For the player and abilities, all CRUD functions have been implemented. You cannot update or delete fight logs. A default monster with *Id: b5774a2a-95da-e911-a603-80fa5b0fc197*, will be created after running provided SQL script, you don't need to add a new monster. It will be used for each combat by default (Didn't use environment variable or anything else for this, Id can be changed to another existing DB Player entry from the FightsController.cs).
 
 ##### Players
 ```javascript
